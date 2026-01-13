@@ -61,7 +61,7 @@ class SearchStatus(str, enum.Enum):
     CLOSED = "closed"
 
 
-class Search_cache(Base):
+class SearchCache(Base):
     __tablename__ = "search_caches"
 
     id = Column(Integer, primary_key=True)
