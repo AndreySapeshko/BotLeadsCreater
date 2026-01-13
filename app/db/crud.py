@@ -27,3 +27,8 @@ async def get_or_create_user(
     await session.flush()
 
     return user
+
+
+async def get_user_by_telegram_id(session: AsyncSession, telegram_id: int):
+    stmt = select(User).where(User.telegram_id == telegram_id)
+    return (await session.scalars(stmt)).one_or_none()
