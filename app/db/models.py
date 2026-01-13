@@ -23,3 +23,9 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User telegram_id={self.telegram_id} username={self.username}>"
+
+
+class Query(Base):
+    __tablename__ = "queries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
