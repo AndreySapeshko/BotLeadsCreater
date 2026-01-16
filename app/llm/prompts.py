@@ -1,9 +1,6 @@
 LLM_PROMPT = """
 You analyze a clinic website based on technical signals.
 
-Input JSON:
-{signals}
-
 Your task:
 1. Infer what problem this clinic likely has with handling client requests.
 2. Propose a realistic automation opportunity.

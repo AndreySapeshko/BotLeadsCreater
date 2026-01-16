@@ -1,21 +1,24 @@
 import asyncio
+import logging
+import logging.config
 
 from aiogram import Bot, Dispatcher
 
 from app.bot.handlers import router
 from app.config import SERPER_KEY, TELEGRAM_BOT_TOKEN
-from app.db.session import get_session
 from app.integrations.http_fetch import HtmlFetcher
 from app.integrations.serper import SerperClient
 from app.llm.llm_stage import LLMStage
 from app.llm.open_router_client import get_open_router_client
+from app.logging_config import LOGGING_CONFIG
 from app.repositories.domain_repo import DomainRepo
-from app.repositories.query_repo import QueryRepo
+from app.repositories.query_repo import query_repo
 from app.repositories.search_cache_repo import SearchCacheRepo
-from app.repositories.user_domain_repo import UserDomainRepo
+from app.repositories.user_domain_repo import user_domain_repo
 from app.services.pipeline_service import PipelineService
 
-session = get_session()
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
 
 openrouter_llm = get_open_router_client()
 llm_stage = LLMStage(openrouter_llm)
@@ -23,10 +26,8 @@ llm_stage = LLMStage(openrouter_llm)
 serper = SerperClient(SERPER_KEY)
 fetcher = HtmlFetcher()
 
-query_repo = QueryRepo(session)
-domain_repo = DomainRepo(session)
-search_cache_repo = SearchCacheRepo(session)
-user_domain_repo = UserDomainRepo(session)
+domain_repo = DomainRepo()
+search_cache_repo = SearchCacheRepo()
 
 pipeline = PipelineService(
     serper=serper,
@@ -45,7 +46,7 @@ bot = Bot(TELEGRAM_BOT_TOKEN)
 async def main():
 
     dp.include_router(router)
-    print("🤖 Bot service started")
+    print(f"🤖 Bot service started bot token: {TELEGRAM_BOT_TOKEN[:15]}")
 
     try:
         await dp.start_polling(bot)

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from app.db.session import AsyncSessionLocal
 from app.integrations.http_fetch import HtmlFetcher
 from app.integrations.serper import SerperClient
 from app.utils.html_signals import extract_signals
@@ -25,7 +26,9 @@ class PipelineService:
         self.user_domain_repo = user_domain_repo
         self.llm_stage = llm_stage
 
-    async def run(self, user_id, business_type: str, max_results_per_query: int = 10) -> dict:
+    async def run(
+        self, session: AsyncSessionLocal, user_id, business_type: str, max_results_per_query: int = 10
+    ) -> dict:
         queries = await self.query_repo.get_active(user_id=user_id, business_type=business_type)
         if not queries:
             return {"status": "no_queries"}
@@ -45,18 +48,19 @@ class PipelineService:
 
         # 2) Upsert domains + write search_cache
         # domain_repo должен вернуть mapping domain->domain_id
-        domain_ids = await self.domain_repo.upsert_many([c[1] for c in candidates], seen_at=seen_at)
+        domain_ids = await self.domain_repo.upsert_many(session, [c[1] for c in candidates], seen_at=seen_at)
         await self.search_cache_repo.upsert_many(
+            session,
             [
                 {"query_id": qid, "domain_id": domain_ids[dom], "seen_at": seen_at, "rank": rank}
                 for (qid, dom, url, rank) in candidates
-            ]
+            ],
         )
 
         # 3) Filter: only domains not yet seen by this user
         uniq_domains = list({c[1] for c in candidates})
         new_domain_ids = await self.user_domain_repo.filter_new_domains(
-            user_id=user_id, domains=uniq_domains, domain_ids=domain_ids
+            session=session, user_id=user_id, domains=uniq_domains, domain_ids=domain_ids
         )
         # new_domain_ids: list of domain strings or ids — как решишь в репо
 
@@ -71,9 +75,12 @@ class PipelineService:
                 continue
 
             sig = extract_signals(dom, html)
-
+            print(
+                f"sig['has_form']: {sig["has_form"]}, sig['has_telegram']: {sig["has_telegram"]}"
+                f", sig['has_chat']: {sig["has_chat"]}"
+            )
             # v1 фильтр
-            if sig["has_form"] and (not sig["has_telegram"]) and (not sig["has_chat"]):
+            if sig["has_form"] and (not sig["has_telegram"]):
                 leads.append(sig)
 
         # 5) LLM stage (пока заглушка)
@@ -81,7 +88,7 @@ class PipelineService:
 
         # 6) Save user_domain leads
         await self.user_domain_repo.upsert_leads(
-            user_id=user_id, domains=[x["domain"] for x in enriched], status="lead"
+            session=session, user_id=user_id, domains=[x["domain"] for x in enriched], status="lead"
         )
 
         return {

@@ -44,9 +44,12 @@ def normalize_domain(url: str) -> str | None:
     p = urlparse(url)
     host = (p.netloc or "").lower()
     host = host.split("@")[-1].split(":")[0]
+    host = host.rstrip(".")
     if host.startswith("www."):
         host = host[4:]
     if not host:
+        return None
+    if "." not in host:
         return None
     if host in BLOCKED_HOSTS:
         return None

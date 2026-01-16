@@ -37,7 +37,7 @@ class Query(Base):
     __tablename__ = "queries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID, ForeignKey("users.id"), index=True, nullable=False)
+    user_id = Column(UUID, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     business_type = Column(String, nullable=True)
     region = Column(String, nullable=True, default="ru")
     search_phrase = Column(String, nullable=False)
@@ -65,8 +65,8 @@ class SearchCache(Base):
     __tablename__ = "search_caches"
 
     id = Column(Integer, primary_key=True)
-    query_id = Column(UUID, ForeignKey("queries.id"), index=True, nullable=False)
-    domain_id = Column(UUID, ForeignKey("domains.id"), index=True, nullable=False)
+    query_id = Column(UUID, ForeignKey("queries.id", ondelete="CASCADE"), index=True, nullable=False)
+    domain_id = Column(UUID, ForeignKey("domains.id", ondelete="CASCADE"), index=True, nullable=False)
     seen_at = Column(DateTime)
     rank = Column(Integer)
     status = Column(String, default=SearchStatus.LIVE, index=True)
@@ -85,8 +85,8 @@ class UserDomain(Base):
     __tablename__ = "user_domains"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(UUID, ForeignKey("users.id"), index=True, nullable=False)
-    domain_id = Column(UUID, ForeignKey("domains.id"), index=True, nullable=False)
+    user_id = Column(UUID, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    domain_id = Column(UUID, ForeignKey("domains.id", ondelete="CASCADE"), index=True, nullable=False)
     status = Column(String, default=UserDomainStatus.NEW, index=True)
     first_seen = Column(DateTime, default=datetime.utcnow)
     last_seen = Column(DateTime)

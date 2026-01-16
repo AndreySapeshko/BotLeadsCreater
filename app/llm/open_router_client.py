@@ -59,6 +59,9 @@ class OpenRouterLLMClient(BaseLLMClient):
                     await asyncio.sleep(31)
                     break
 
+                except Exception:
+                    break
+
                 except json.JSONDecodeError:
                     # модель ответила, но формат битый — пробуем ещё раз
                     continue

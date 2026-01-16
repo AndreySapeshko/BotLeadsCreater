@@ -1,6 +1,9 @@
 import json
+import logging
 
 from app.llm.prompts import LLM_PROMPT
+
+logger = logging.getLogger(__name__)
 
 
 class LLMStage:
@@ -11,9 +14,9 @@ class LLMStage:
         enriched = []
 
         for s in signals_list:
-            payload = json.dumps(s, ensure_ascii=False)
+            payload = json.dumps(s, ensure_ascii=False, indent=2)
 
-            prompt = LLM_PROMPT.format(signals=payload)
+            prompt = f"{LLM_PROMPT}\n\nInput JSON:\n{payload}"
 
             messages = [
                 {"role": "system", "content": "You are a B2B automation consultant."},
@@ -22,13 +25,15 @@ class LLMStage:
 
             try:
                 resp = await self.llm.analyze(messages)
-            except Exception:
-                continue
+            except Exception as e:
+                logger.info(f"Exception in llm.analyse: {e}")
+                resp = None
 
             # resp уже JSON
-            s["problem"] = resp.get("problem")
-            s["opportunity"] = resp.get("opportunity")
-            s["pitch"] = resp.get("pitch")
+            if resp:
+                s["problem"] = resp.get("problem")
+                s["opportunity"] = resp.get("opportunity")
+                s["pitch"] = resp.get("pitch")
 
             enriched.append(s)
 

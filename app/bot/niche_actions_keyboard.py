@@ -9,7 +9,7 @@ def niche_actions_keyboard(niche: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="✏️ Изменить", callback_data=f"edit:{niche}"),
             ],
             [
-                InlineKeyboardButton(text="❌ Удалить", callback_data=f"delete{niche}"),
+                InlineKeyboardButton(text="❌ Удалить", callback_data=f"delete:{niche}"),
             ],
         ]
     )

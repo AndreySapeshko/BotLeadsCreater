@@ -1,13 +1,12 @@
-from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import insert
 
 from app.db.models import SearchCache
+from app.db.session import AsyncSessionLocal
 
 
 class SearchCacheRepo:
-    def __init__(self, session):
-        self.session = session
 
-    async def upsert_many(self, rows: list[dict]):
+    async def upsert_many(self, session: AsyncSessionLocal, rows: list[dict]):
         """
         rows = [{"query_id":..., "domain_id":..., "seen_at":..., "rank":...}]
         """
@@ -22,4 +21,4 @@ class SearchCacheRepo:
                 "rank": stmt.excluded.rank,
             },
         )
-        await self.session.execute(stmt)
+        await session.execute(stmt)

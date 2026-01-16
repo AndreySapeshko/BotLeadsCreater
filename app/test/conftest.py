@@ -39,3 +39,11 @@ async def session(engine) -> AsyncSession:
     async with async_session() as session:
         async with session.begin():
             yield session
+
+
+@pytest.fixture
+def sessionmaker(engine):
+    return async_sessionmaker(
+        bind=engine,
+        expire_on_commit=False,
+    )
